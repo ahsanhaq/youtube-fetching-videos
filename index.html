@@ -1,0 +1,80 @@
+
+    
+    
+    <script src="//code.jquery.com/jquery-2.1.4.js" type="text/javascript"></script>
+    <script type="text/javascript" src="lib/js/underscore-min.js"></script>
+    <script type="text/javascript" src="lib/js/backbone-min.js"></script>
+    <script type="text/javascript" src="lib/js/pretty-json-min.js"></script>
+    <script>
+        $(document).ready(function() {
+		
+            youtubeApiCall();
+            $("#pageTokenNext").on( "click", function( event ) {
+                $("#pageToken").val($("#pageTokenNext").val());
+                youtubeApiCall();
+            });
+            $("#pageTokenPrev").on( "click", function( event ) {
+                $("#pageToken").val($("#pageTokenPrev").val());
+                youtubeApiCall();
+            });     
+        });
+        function youtubeApiCall(){
+            var video = $(location).attr('href').split('v=')[1];
+			
+            $.ajax({
+                cache: false,
+                data: $.extend({
+                    key: 'AIzaSyCg3WitBUQl5ifC2QygQaZUPOSRMKfSD5E',
+					playlistId: 'PLqKaReaMFwTVSh_esrz1A8xOak8r82ake',
+                    relatedToVideoId: video,
+                    part: 'snippet',
+                    type:'video'
+                }, {maxResults:3,pageToken:$("#pageToken").val()}),
+                dataType: 'json',
+                type: 'GET',
+                timeout: 5000,
+                url: 'https://www.googleapis.com/youtube/v3/playlistItems'
+            })
+            .done(function(data) {
+                if (typeof data.prevPageToken === "undefined") {$("#pageTokenPrev").hide();}else{$("#pageTokenPrev").show();}
+                if (typeof data.nextPageToken === "undefined") {$("#pageTokenNext").hide();}else{$("#pageTokenNext").show();}
+                var items = data.items, videoList = "";
+                $("#pageTokenNext").val(data.nextPageToken);
+                $("#pageTokenPrev").val(data.prevPageToken);
+                $.each(items, function(index,e) {
+                    videoList = videoList + '<li class="hyv-video-list-item"><div class="hyv-content-wrapper"><a href="?v='+e.id.videoId+'" class="hyv-content-link" title="'+e.snippet.title+'"><span class="title">'+e.snippet.title+'</span><span class="stat attribution">by <span>'+e.snippet.channelTitle+'</span></span></a></div><div class="hyv-thumb-wrapper"><a href="?v='+e.id.videoId+'" class="hyv-thumb-link"><span class="hyv-simple-thumb-wrap"><img alt="'+e.snippet.title+'" src="'+e.snippet.thumbnails.default.url+'" width="120" height="90"></span></a></div></li>';
+                });
+                $("#hyv-watch-related").html(videoList);
+                // JSON Responce to display for user
+                new PrettyJSON.view.Node({ 
+                    el:$(".hyv-watch-sidebar-body"), 
+                    data:data
+                });
+            });
+        }
+    </script>
+ 
+    <div class="row-fluid">
+        <main id="content" role="main" class="span12">
+            <!-- Begin Content -->
+            <div id="hyv-page-container" style="clear:both;">
+                <div class="hyv-content-alignment">
+                    <div id="hyv-page-content" class="" style="overflow:hidden;">
+                        <div>
+                            <input type="hidden" id="pageToken" value="">
+                            <div class="btn-group" role="group" aria-label="...">
+                              <button type="button" id="pageTokenPrev" value="" class="btn btn-default">Prev</button>
+                              <button type="button" id="pageTokenNext" value="" class="btn btn-default">Next</button>
+                            </div>
+                        </div>
+                        <div id="hyv-watch-content" class="hyv-watch-main-col hyv-card hyv-card-has-padding">
+                            <ul id="hyv-watch-related" class="hyv-video-list">
+                            </ul>
+                        </div>
+
+                       
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
